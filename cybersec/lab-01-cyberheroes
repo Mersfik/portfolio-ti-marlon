@@ -1,0 +1,143 @@
+🛡️ TryHackMe - CyberHeroes Write-up
+📌 Visão Geral
+Plataforma: TryHackMe
+Lab: CyberHeroes
+Dificuldade: Easy
+Categoria: Web Exploitation
+
+Este laboratório tem como objetivo identificar e explorar uma vulnerabilidade em uma aplicação web, permitindo autenticação sem credenciais legítimas.
+
+
+🎯 Objetivo
+Analisar a aplicação web disponibilizada
+Identificar possíveis vulnerabilidades no sistema de login
+Obter acesso não autorizado
+Capturar a flag
+
+
+🛠️ Metodologia
+
+A abordagem utilizada seguiu as etapas clássicas de testes de segurança:
+
+Reconhecimento
+Enumeração
+Análise da aplicação
+Identificação da vulnerabilidade
+Exploração
+
+
+🔎 Reconhecimento e Enumeração
+
+Ao acessar a aplicação web, foi exibida a seguinte mensagem:
+"We are a group of young Hackers, Developers, Bug Hunters, Cyber Warriors, Cyber Gaurdians. We find vulnerabilities in the website legally and save them from getting hacked, Join our forces, find the vuln on our login page and login to join us. :D"
+Com base nisso, o foco foi direcionado para a página de autenticação.
+
+
+🌐 Análise da Aplicação
+
+Durante a inspeção da página de login utilizando as ferramentas de desenvolvedor do navegador, foi identificado um script JavaScript responsável pela autenticação do usuário.
+
+Trecho relevante do código:
+
+function authenticate() {
+  a = document.getElementById('uname')
+  b = document.getElementById('pass')
+  const RevereString = str => [...str].reverse().join('');
+  if (a.value=="h3ck3rBoi" & b.value==RevereString("54321@terceSrepuS")) { 
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+        document.getElementById("flag").innerHTML = this.responseText ;
+        document.getElementById("todel").innerHTML = "";
+        document.getElementById("rm").remove() ;
+      }
+    };
+    xhttp.open("GET", "RandomLo0o0o0o0o0o0o0o0o0o0gpath12345_Flag_"+a.value+"_"+b.value+".txt", true);
+    xhttp.send();
+  }
+  else {
+    alert("Incorrect Password, try again.. you got this hacker !")
+  }
+}
+
+
+🧠 Identificação da Vulnerabilidade
+
+A lógica de autenticação é realizada inteiramente no lado do cliente (client-side), o que representa uma falha crítica de segurança.
+
+Observações:
+
+O usuário válido está hardcoded no código (h3ck3rBoi)
+A senha está ofuscada por meio de uma função de reversão de string
+A validação ocorre apenas no navegador
+
+Senha encontrada no código:
+
+54321@terceSrepuS
+
+Após reversão:
+
+SuperSecret@12345
+
+
+💥 Exploração
+
+A exploração foi realizada da seguinte forma:
+
+Identificação do usuário válido no código-fonte
+Reversão da string utilizada como senha
+Inserção das credenciais no formulário de login
+
+Credenciais utilizadas:
+
+Username: h3ck3rBoi
+Password: SuperSecret@12345
+
+Após autenticação bem-sucedida, a aplicação realiza uma requisição para um arquivo contendo a flag.
+
+
+🏁 Captura da Flag
+
+A flag é retornada através de uma requisição HTTP para o seguinte padrão de caminho:
+
+RandomLo0o0o0o0o0o0o0o0o0o0gpath12345_Flag_<username>_<password>.txt
+
+Isso confirma que não há validação real no servidor, e que o controle de acesso é totalmente dependente do client-side.
+
+
+🚨 Impacto
+
+Essa vulnerabilidade permite que qualquer usuário:
+
+Acesse o código-fonte da aplicação
+Descubra credenciais válidas
+Burle completamente o sistema de autenticação
+
+Classificação:
+
+Client-Side Authentication Vulnerability
+
+
+🔐 Recomendações de Segurança
+
+Para mitigar esse tipo de falha:
+
+Implementar autenticação no lado do servidor (server-side)
+Nunca expor credenciais no código-fonte
+Evitar lógica sensível em JavaScript
+Utilizar hashing seguro para senhas
+Implementar controle de sessão adequado
+
+
+🧠 Lições Aprendidas
+Nunca confiar em validações realizadas no client-side
+Código JavaScript pode ser facilmente inspecionado e manipulado
+A segurança deve sempre ser aplicada no backend
+Pequenas falhas podem comprometer totalmente uma aplicação
+
+
+🚀 Conclusão
+
+Este laboratório demonstra uma falha comum, porém crítica, em aplicações web: a confiança indevida no lado do cliente para processos de autenticação.
+
+Apesar de simples, esse tipo de vulnerabilidade ainda é encontrado em sistemas reais mal projetados, reforçando a importância de boas práticas de desenvolvimento seguro.
