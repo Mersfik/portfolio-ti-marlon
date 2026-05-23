@@ -1,0 +1,224 @@
+Ativação Segura do Secure Boot em Placa-Mãe Pichau H610M-T
+1. Resumo do Caso
+
+Este case documenta o processo de análise, recuperação e configuração segura do Secure Boot em um computador com placa-mãe Pichau H610M-T Alphard, processador Intel Core i5-12400F, Windows instalado em modo UEFI e disco em formato GPT.
+
+O objetivo era habilitar o Secure Boot para atender aos requisitos de segurança exigidos por jogos com sistemas anticheat modernos, como Battlefield, sem comprometer a inicialização do sistema ou a exibição de vídeo.
+
+Durante a primeira tentativa de configuração, o computador deixou de exibir imagem após alterações na BIOS/UEFI. Foi necessário realizar a recuperação das configurações da placa-mãe e refazer o processo de forma controlada, validando cada etapa antes de prosseguir.
+
+2. Ambiente
+Item	Informação
+Placa-mãe	Pichau H610M-T Alphard
+Processador	Intel Core i5-12400F
+Firmware/BIOS	American Megatrends
+Sistema Operacional	Windows
+Modo da BIOS	UEFI
+Estilo de partição	GPT
+Secure Boot inicial	Desativado
+CSM inicial	Ativado
+Vídeo inicial na BIOS	Legacy
+3. Problema Identificado
+
+O sistema precisava do Secure Boot ativado, porém a BIOS apresentava configurações parcialmente incompatíveis com esse recurso.
+
+Durante a análise, foi identificado que:
+
+Modo da BIOS: UEFI
+Disco: GPT
+Secure Boot: Desativado
+CSM Support: Enabled
+Video Option ROM: Legacy
+
+Apesar de o Windows já estar instalado corretamente em UEFI + GPT, a BIOS ainda mantinha o CSM Support ativo e a inicialização de vídeo configurada como Legacy.
+
+Essa combinação poderia impedir a ativação correta do Secure Boot ou causar perda de vídeo ao desativar o CSM diretamente.
+
+4. Conceitos Técnicos Envolvidos
+Secure Boot
+
+O Secure Boot é um recurso de segurança do padrão UEFI que verifica se os componentes carregados durante a inicialização do sistema são confiáveis. Ele ajuda a impedir que bootloaders maliciosos ou não autorizados sejam executados antes do carregamento do sistema operacional.
+
+UEFI
+
+O UEFI é o modo moderno de inicialização dos computadores, substituindo o modelo antigo conhecido como BIOS Legacy. Para que o Secure Boot funcione corretamente, o sistema precisa estar instalado em modo UEFI.
+
+GPT
+
+O GPT é o estilo de partição recomendado para sistemas modernos em UEFI. No caso analisado, o disco já estava em GPT, o que permitia prosseguir com a ativação do Secure Boot.
+
+CSM
+
+O CSM, ou Compatibility Support Module, é um módulo de compatibilidade que permite à placa-mãe inicializar sistemas ou dispositivos antigos em modo Legacy. Para utilizar Secure Boot corretamente, o ideal é manter o CSM desativado.
+
+Platform Key — PK
+
+A Platform Key, ou PK, é uma das chaves principais do Secure Boot. Sem ela, a BIOS permanece em Setup Mode e o Secure Boot não consegue ser ativado corretamente.
+
+5. Diagnóstico
+
+O primeiro diagnóstico foi feito no Windows usando o msinfo32, onde foram confirmadas as seguintes informações:
+
+Modo da BIOS: UEFI
+Estado da Inicialização Segura: Desativado
+Produto BaseBoard: H610M-T
+Fabricante da BaseBoard: PICHAU
+
+Também foi validado que o disco estava em GPT, condição necessária para continuar com a configuração de Secure Boot.
+
+Na BIOS, foi identificado o seguinte cenário:
+
+CSM Support: Enabled
+Boot Option Filter: UEFI Only
+Storage: UEFI
+Video: Legacy
+Other PCI Devices: UEFI
+
+O ponto mais crítico era:
+
+Video: Legacy
+
+Isso indicava que a placa de vídeo ainda estava sendo inicializada em modo de compatibilidade, mesmo com o boot principal em UEFI.
+
+6. Ação Realizada
+
+O processo foi feito em etapas para reduzir riscos.
+
+Etapa 1 — Recuperação da BIOS
+
+Após a primeira tentativa de ativação do Secure Boot causar ausência de imagem, foi realizado o reset da BIOS/CMOS.
+
+Procedimento utilizado:
+
+1. Desligar o computador
+2. Remover o cabo de energia
+3. Pressionar o botão power por alguns segundos para descarregar energia residual
+4. Remover a bateria CMOS da placa-mãe
+5. Aguardar alguns minutos
+6. Recolocar a bateria
+7. Ligar novamente o computador
+
+Após o reset, a imagem voltou normalmente.
+
+Etapa 2 — Validação do Windows
+
+Antes de tentar ativar o Secure Boot novamente, foram verificados os requisitos básicos:
+
+Windows em UEFI
+Disco em GPT
+Secure Boot ainda desativado
+
+Essa validação foi importante para evitar alterações incorretas na BIOS.
+
+Etapa 3 — Alteração do Vídeo para UEFI
+
+Na tela de configuração do CSM, foi alterado:
+
+Video: Legacy
+
+para:
+
+Video: UEFI
+
+Após salvar e reiniciar, o computador exibiu imagem normalmente, confirmando que a placa de vídeo era compatível com inicialização em UEFI.
+
+Etapa 4 — Desativação do CSM
+
+Com o vídeo já configurado corretamente em UEFI, foi possível desativar o CSM:
+
+CSM Support: Disabled
+
+Após salvar e reiniciar, o computador continuou exibindo imagem e inicializando corretamente.
+
+Etapa 5 — Restauração das Chaves do Secure Boot
+
+Ao tentar ativar o Secure Boot, a BIOS exibiu a mensagem:
+
+Secure Boot can be enabled when System in User Mode.
+Repeat operation after enrolling Platform Key (PK)
+
+Isso indicava que a BIOS estava sem a Platform Key, permanecendo em Setup Mode.
+
+Na tela de gerenciamento de chaves, foi utilizada a opção:
+
+Restore Factory Keys
+
+Essa ação restaurou as chaves padrão do Secure Boot, incluindo:
+
+Platform Key (PK)
+Key Exchange Keys (KEK)
+Authorized Signatures (db)
+Forbidden Signatures (dbx)
+
+Após isso, o sistema passou para:
+
+System Mode: User
+Etapa 6 — Ativação do Secure Boot
+
+Após restaurar as chaves de fábrica, o Secure Boot foi configurado como:
+
+Secure Boot: Enabled
+Secure Boot Mode: Standard
+System Mode: User
+
+O modo Standard foi escolhido por ser o modo recomendado para sistemas Windows comuns, utilizando as chaves padrão do fabricante/Microsoft.
+
+O modo Custom foi evitado, pois é indicado para cenários avançados em que o administrador deseja gerenciar manualmente as chaves do Secure Boot.
+
+7. Resultado
+
+Após salvar as configurações e reiniciar o computador, o sistema manteve vídeo normalmente e ficou apto para validação no Windows.
+
+O estado esperado após a configuração é:
+
+Modo da BIOS: UEFI
+Estado da Inicialização Segura: Ativado
+
+Com isso, o computador passou a atender ao requisito de Secure Boot para softwares e jogos que exigem esse recurso de segurança.
+
+8. Possível Causa do Problema Inicial
+
+A causa provável da falha inicial foi uma combinação de fatores:
+
+CSM ativo
+Vídeo configurado como Legacy
+Secure Boot sem chaves instaladas
+Possível uso da opção Reset To Setup Mode
+
+A opção Reset To Setup Mode remove as chaves do Secure Boot e coloca a BIOS em modo de configuração. Isso impede a ativação correta do Secure Boot até que a Platform Key (PK) seja restaurada.
+
+A opção correta para esse caso era:
+
+Restore Factory Keys
+9. Lições Aprendidas
+
+Este caso reforçou a importância de realizar alterações de firmware de forma gradual e validada.
+
+Principais aprendizados:
+
+1. Confirmar se o Windows está em UEFI antes de ativar Secure Boot
+2. Confirmar se o disco está em GPT
+3. Verificar se o vídeo está em UEFI antes de desativar o CSM
+4. Desativar o CSM antes de ativar Secure Boot
+5. Restaurar as Factory Keys quando a BIOS estiver em Setup Mode
+6. Preferir Secure Boot Mode em Standard para Windows comum
+7. Evitar alterações em modo Custom sem necessidade
+8. Documentar cada etapa antes de prosseguir
+
+
+10. Conclusão
+
+O problema foi resolvido por meio de diagnóstico progressivo e configuração adequada da BIOS/UEFI.
+
+A solução envolveu a recuperação da BIOS, validação do modo de instalação do Windows, alteração do vídeo para UEFI, desativação do CSM, restauração das chaves de fábrica do Secure Boot e ativação do recurso em modo Standard.
+
+Este case demonstra conhecimentos práticos em:
+
+Suporte técnico
+BIOS/UEFI
+Secure Boot
+CSM/Legacy
+Particionamento GPT
+Diagnóstico de inicialização
+Resolução de problemas de hardware/software
+Documentação técnica
